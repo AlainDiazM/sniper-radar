@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import anthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,28 +36,7 @@ def sniper(request: SearchRequest):
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{
             "role": "user",
-            "content": """Busca en internet oportunidades reales de inversion infravaloradas en: """ + request.query + """
-
-Busca listados reales actuales. Luego responde UNICAMENTE con un JSON array, sin texto antes ni despues, con este formato exacto:
-[
-  {
-    "titulo": "nombre del producto",
-    "precio_detectado": 1000,
-    "moneda": "EUR",
-    "valor_mercado": 1500,
-    "descuento_pct": 33,
-    "score": 85,
-    "decision": "COMPRAR",
-    "riesgo": "bajo",
-    "liquidez": "alta",
-    "motivo": "explicacion de por que es oportunidad",
-    "urgencia": "explicacion de urgencia",
-    "verificacion": "pasos para verificar",
-    "url": "https://url-real.com"
-  }
-]
-
-Incluye 3-5 oportunidades. SOLO el JSON array, nada mas."""
+            "content": "Actua como equipo de elite de deteccion de oportunidades de inversion y coleccionismo. Busca en internet ahora mismo productos de la categoria " + request.query + " que se esten vendiendo muy por debajo de su valor real. Busca en eBay, Catawiki, Wallapop, Todocoleccion y subastas online. Para cada oportunidad encontrada indica el titulo exacto, precio actual, valor de mercado estimado, descuento en porcentaje, SNIPER SCORE del 0 al 100, motivo exacto de la incongruencia de precio, riesgo, liquidez, decision COMPRAR o ANALIZAR RAPIDO o DESCARTAR, y la URL real del listing. Devuelve SOLO un JSON array sin texto adicional con estos campos exactos: titulo, precio_detectado, moneda, valor_mercado, descuento_pct, score, decision, riesgo, liquidez, motivo, urgencia, verificacion, url"
         }]
     )
 
