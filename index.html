@@ -5,30 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SNIPER RADAR</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
-  :root{--bg:#080c10;--surface:#0d1117;--surface2:#141b24;--border:#1e2d3d;--accent:#00d4ff;--accent2:#ff6b35;--green:#00ff88;--red:#ff3b5c;--yellow:#ffd700;--text:#e8f4f8;--muted:#4a6080}
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-  .container{max-width:900px;margin:0 auto;padding:24px 20px;position:relative;z-index:1}
-  .header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
-  .logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px rgba(0,212,255,0.4);line-height:1}
-  .logo span{color:var(--accent2)}
-  .tagline{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
-  .author{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;margin-left:auto}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
-  .plabel{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
-  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:20px}
-  .cat{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:10px 8px;border-radius:8px;font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'DM Sans',sans-serif}
-  .cat:hover,.cat.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05)}
-  .cat .ic{display:block;font-size:18px;margin-bottom:4px}
-  .row{display:flex;gap:10px}
-  .inp{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:8px;font-family:'Space Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
-  .inp:focus{border-color:var(--accent)}
-  .inp::placeholder{color:var(--muted)}
-  .btn{background:var(--accent);color:var(--bg);border:none;padding:12px 24px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-  .btn:hover{background:#33ddff}
-  .btn:disabled{opacity:0.4;cursor:not-allowed}
-  .scan{display:none;align-items:center;gap:12px;padding:16px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:8px;margin-bot
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+:root{--bg:#080c10;--surface:#0d1117;--surface2:#141b24;--border:#1e2d3d;--accent:#00d4ff;--accent2:#ff6b35;--green:#00ff88;--red:#ff3b5c;--yellow:#ffd700;--text:#e8f4f8;--muted:#4a6080}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{max-width:900px;margin:0 auto;padding:24px 20px;position:relative;z-index:1}
+.header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px rgba(0,212,255,0.4);line-height:1}
+.logo span{color:var(--accent2)}
+.tagline{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.author{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;margin-left:auto}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.plabel{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:20px}
+.cat{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:10px 8px;border-radius:8px;font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'DM Sans',sans-serif}
+.cat:hover,.cat.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05)}
+.cat .ic{display:block;font-size:18px;margin-bottom:4px}
+.row{display:flex;gap:10px}
+.inp{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:8px;font-family:'Space Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--muted)}
+.btn{background:var(--accent);color:var(--bg);border:none;padding:12px 24px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn:hover{background:#33ddff}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.scan{display:none;align-items:center;gap:12px;padding:16px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:8px;margin-bottom:24px;font-family:'Space Mono',monospace;font-size:12px;color:var(--accent)}
+.scan.on{display:flex}
+.bar{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.fill{height:100%;background:var(--acc
