@@ -1,7 +1,9 @@
 import os
+import json
 import anthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -12,6 +14,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -34,41 +37,19 @@ Para cada oportunidad detectada, devuelve un JSON array con esta estructura exac
     "valor_mercado": número,
     "descuento_pct": número,
     "score": número del 0 al 100,
-    "decision": "COMPRAR" | "ANALIZAR RÁPIDO" | "DESCARTAR",
-    "riesgo": "bajo" | "medio" | "alto",
-    "liquidez": "alta" | "media" | "baja",
+    "decision": "COMPRAR" o "ANALIZAR RÁPIDO" o "DESCARTAR",
+    "riesgo": "bajo" o "medio" o "alto",
+    "liquidez": "alta" o "media" o "baja",
     "motivo": "explicación detallada de por qué es una oportunidad real",
     "urgencia": "explicación de urgencia temporal si aplica",
     "verificacion": "pasos clave para verificar antes de comprar",
-    "url": "URL real y verificable donde se vende o referencia"
+    "url": "URL real y verificable donde se vende"
   }
 ]
 
 Busca entre 3 y 5 oportunidades reales. Prioriza score >= 75.
-Incluye URLs reales de plataformas como eBay, Catawiki, Wallapop, Idealista, subastas Christie's/Sotheby's, etc.
-Sé específico con precios reales y motivos concretos (error de catalogación, venta urgente, mal tasado, etc.).
 Responde SOLO con el JSON array, sin texto adicional."""
 
 @app.get("/")
 def root():
-    return {"status": "SNIPER RADAR ACTIVO"}
-
-@app.post("/sniper")
-def sniper(request: SearchRequest):
-    message = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=2000,
-        system=SYSTEM_PROMPT,
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{
-            "role": "user",
-            "content": f"Busca oportunidades reales infravaloradas en: {request.query}. Busca listados actuales reales con URLs verificables."
-        }]
-    )
-    
-    full_text = ""
-    for block in message.content:
-        if block.type == "text":
-            full_text += block.text
-
-    return {"result": full_text, "query": request.query}
+    return {"status": "SNIPER R
