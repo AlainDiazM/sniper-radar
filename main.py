@@ -1,9 +1,9 @@
 import os
+import re
 import json
 import anthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -24,32 +24,26 @@ client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 class SearchRequest(BaseModel):
     query: str
 
-SYSTEM_PROMPT = """Eres SNIPER RADAR, un sistema experto en detectar oportunidades de inversión y coleccionismo infravaloradas en internet.
-
-Tu misión: buscar en internet productos reales que se vendan muy por debajo de su valor real (mínimo 25% de descuento sobre valor de mercado).
-
-Para cada oportunidad detectada, devuelve un JSON array con esta estructura exacta:
-[
-  {
-    "titulo": "nombre del producto",
-    "precio_detectado": número,
-    "moneda": "EUR o USD",
-    "valor_mercado": número,
-    "descuento_pct": número,
-    "score": número del 0 al 100,
-    "decision": "COMPRAR" o "ANALIZAR RÁPIDO" o "DESCARTAR",
-    "riesgo": "bajo" o "medio" o "alto",
-    "liquidez": "alta" o "media" o "baja",
-    "motivo": "explicación detallada de por qué es una oportunidad real",
-    "urgencia": "explicación de urgencia temporal si aplica",
-    "verificacion": "pasos clave para verificar antes de comprar",
-    "url": "URL real y verificable donde se vende"
-  }
-]
-
-Busca entre 3 y 5 oportunidades reales. Prioriza score >= 75.
-Responde SOLO con el JSON array, sin texto adicional."""
+SYSTEM_PROMPT = "Eres SNIPER RADAR, experto en detectar oportunidades infravaloradas. Busca productos reales que se vendan mas del 25% por debajo de su valor de mercado. Devuelve SOLO un JSON array con campos: titulo, precio_detectado, moneda, valor_mercado, descuento_pct, score, decision, riesgo, liquidez, motivo, urgencia, verificacion, url. Sin texto adicional."
 
 @app.get("/")
 def root():
-    return {"status": "SNIPER R
+    return {"status": "SNIPER RADAR ACTIVO"}
+
+@app.post("/sniper")
+def sniper(request: SearchRequest):
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=2000,
+        system=SYSTEM_PROMPT,
+        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+        messages=[{"role": "user", "content": "Busca oportunidades reales infravaloradas en: " + request.query}]
+    )
+    full_text = ""
+    for block in message.content:
+        if hasattr(block, "text"):
+            full_text += block.text
+    match = re.search(r'\[[\s\S]*\]', full_text)
+    if match:
+        return {"result": match.group(), "query": request.query}
+    return {"result": full_text, "query": request.query}
