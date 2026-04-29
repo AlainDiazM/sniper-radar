@@ -3,7 +3,7 @@ import re
 import anthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -36,11 +36,19 @@ def sniper(request: SearchRequest):
     fuentes = request.fuentes or "eBay, Catawiki, Wallapop, Todocoleccion"
     message = client.messages.create(
         model="claude-sonnet-4-5",
-        max_tokens=3000,
+        max_tokens=4000,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{
             "role": "user",
-            "content": "Actua como equipo de elite de deteccion de oportunidades de inversion y coleccionismo. Busca en " + fuentes + " productos de la categoria " + request.query + " que se esten vendiendo muy por debajo de su valor real. Para cada oportunidad encontrada devuelve SOLO un JSON array sin texto adicional con estos campos: titulo, precio_detectado, moneda, valor_mercado, descuento_pct, score, decision, riesgo, liquidez, motivo, urgencia, verificacion, url"
+            "content": """Eres un experto cazador de oportunidades de inversion y coleccionismo.
+
+Busca ahora mismo en """ + fuentes + """ productos de la categoria: """ + request.query + """
+
+Encuentra productos reales que se vendan por debajo de su valor. Devuelve exactamente este formato JSON, sin texto antes ni despues:
+
+[{"titulo":"nombre del producto","precio_detectado":1000,"moneda":"EUR","valor_mercado":1500,"descuento_pct":33,"score":85,"decision":"COMPRAR","riesgo":"medio","liquidez":"alta","motivo":"razon concreta","urgencia":"tiempo disponible","verificacion":"como verificar","url":"https://enlace-real.com"}]
+
+Incluye 3 a 5 productos reales. Solo el JSON, nada mas."""
         }]
     )
 
@@ -49,7 +57,7 @@ def sniper(request: SearchRequest):
         if hasattr(block, "text"):
             full_text += block.text
 
-    m = re.search(r'\[[\s\S]*\]', full_text)
+    m = re.search(r'\[[\s\S]*?\]', full_text)
     if m:
         return {"result": m.group(), "query": request.query}
     return {"result": full_text, "query": request.query}
