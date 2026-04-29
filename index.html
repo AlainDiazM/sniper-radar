@@ -89,16 +89,89 @@
     </div>
     <div class="row">
       <input class="inp" id="inp" placeholder="O escribe búsqueda personalizada..." />
-      <button class="btn" id="fireBtn" onclick="run()">⚡ DISPARAR</button>
+      <button class="btn" id="fireBtn">⚡ DISPARAR</button>
     </div>
   </div>
   <div class="scan" id="scan"><span>ESCANEANDO</span><div class="bar"><div class="fill"></div></div><span id="ss">Iniciando...</span></div>
   <div id="out"><div class="empty"><div class="big">TARGET</div><p style="font-family:'Space Mono',monospace;font-size:12px;margin-top:8px">Selecciona categoría y dispara</p></div></div>
 </div>
 <script>
-document.querySelectorAll('.cat').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  document.getElementById('inp').value='';
-}));
-function getQ
+  document.querySelectorAll('.cat').forEach(function(b) {
+    b.addEventListener('click', function() {
+      document.querySelectorAll('.cat').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      document.getElementById('inp').value = '';
+    });
+  });
+
+  document.getElementById('fireBtn').addEventListener('click', function() {
+    var inp = document.getElementById('inp').value.trim();
+    var active = document.querySelector('.cat.active');
+    var query = inp || (active ? active.dataset.cat : 'coleccionismo infravalorado');
+
+    var btn = document.getElementById('fireBtn');
+    var scan = document.getElementById('scan');
+    var out = document.getElementById('out');
+    var ss = document.getElementById('ss');
+
+    btn.disabled = true;
+    scan.classList.add('on');
+    out.innerHTML = '';
+
+    var sts = ['Buscando en mercados...','Analizando precios...','Calculando scores...','Detectando incongruencias...'];
+    var si = 0;
+    var iv = setInterval(function() { ss.textContent = sts[si++ % sts.length]; }, 1800);
+
+    fetch('/sniper', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({query: query})
+    })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(d) {
+      clearInterval(iv);
+      scan.classList.remove('on');
+      var txt = d.result || '';
+      var m = txt.match(/\[[\s\S]*\]/);
+      var parsed = null;
+      if (m) { try { parsed = JSON.parse(m[0]); } catch(e) {} }
+
+      if (parsed && parsed.length > 0) {
+        var h = document.createElement('div');
+        h.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+        h.innerHTML = '<div class="plabel">// Oportunidades detectadas</div><div style="font-family:Space Mono,monospace;font-size:11px;color:var(--muted)"><span style="color:var(--accent)">' + parsed.length + '</span> targets</div>';
+        out.appendChild(h);
+
+        parsed.forEach(function(item, i) {
+          setTimeout(function() {
+            var s = item.score || 0;
+            var sc = s >= 75 ? 'sh' : (s >= 50 ? 'sm' : 'sl');
+            var dec = item.decision || 'ANALIZAR';
+            var dc = dec.toUpperCase().includes('COMPRAR') ? 'db' : (dec.toUpperCase().includes('DESCARTAR') ? 'dd' : 'da');
+            var c = document.createElement('div');
+            c.className = 'card';
+            c.style.animationDelay = (i * 0.1) + 's';
+            c.innerHTML = '<div class="ctop"><div class="sbadge ' + sc + '"><div class="n">' + s + '</div><div class="l">SCORE</div></div><div class="ci"><div class="ct">' + (item.titulo || 'Sin titulo') + '</div><div class="cm"><span class="chip">💰 ' + (item.precio_detectado ? Number(item.precio_detectado).toLocaleString() : '?') + ' ' + (item.moneda || '') + '</span><span class="chip">📊 ' + (item.valor_mercado ? Number(item.valor_mercado).toLocaleString() : '?') + ' ' + (item.moneda || '') + '</span><span class="chip g">📉 -' + (item.descuento_pct || '?') + '%</span></div></div></div><div class="cb"><strong>Oportunidad:</strong> ' + (item.motivo || '—') + '<br>' + (item.urgencia ? '<strong>⏱ Urgencia:</strong> ' + item.urgencia + '<br>' : '') + (item.verificacion ? '<strong>✅ Verificar:</strong> ' + item.verificacion : '') + '</div><div class="cf"><div class="dec ' + dc + '">' + dec + '</div><div class="rl"><span class="rc">Riesgo: ' + (item.riesgo || '—') + '</span><span class="rc">Liquidez: ' + (item.liquidez || '—') + '</span></div>' + (item.url ? '<a href="' + item.url + '" target="_blank" class="lnk">🔗 Ver</a>' : '') + '</div>';
+            out.appendChild(c);
+          }, i * 150);
+        });
+      } else {
+        out.innerHTML = '<div class="err">⚠️ Sin resultados parseables:<br><br>' + txt.substring(0, 400) + '</div>';
+      }
+    })
+    .catch(function(e) {
+      clearInterval(iv);
+      scan.classList.remove('on');
+      out.innerHTML = '<div class="err">❌ Error: ' + e.message + '</div>';
+      btn.disabled = false;
+    })
+    .finally(function() {
+      btn.disabled = false;
+    });
+  });
+</script>
+</body>
+</html>
