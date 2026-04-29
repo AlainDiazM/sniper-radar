@@ -57,7 +57,7 @@ CATEGORY_SEARCHES = {
     "inmueble": [
         "piso venta precio reducido ocasion idealista",
         "casa venta urgente precio bajo mercado fotocasa",
-        "piso oportunidad precio rebajado habitaclia"
+        "apartamento oportunidad precio rebajado habitaclia"
     ],
     "joya": [
         "joya vintage oro venta precio ocasion catawiki",
@@ -101,12 +101,39 @@ def firecrawl_search(query, num_results=5):
             results.append({
                 "url": item.get("url", ""),
                 "title": item.get("title", ""),
-                "content": item.get("markdown", "")[:1000]
+                "content": item.get("markdown", "")[:1500]
             })
         return results
     except Exception as e:
-        print("Firecrawl error:", e)
+        print("Firecrawl search error:", e)
         return []
+
+def firecrawl_scrape(url):
+    api_url = "https://api.firecrawl.dev/v1/scrape"
+    headers = {
+        "Authorization": "Bearer " + FIRECRAWL_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "url": url,
+        "formats": ["markdown"],
+        "onlyMainContent": True
+    }
+    try:
+        r = requests.post(api_url, headers=headers, json=payload, timeout=30)
+        data = r.json()
+        content = data.get("data", {}).get("markdown", "")
+        return content[:3000]
+    except Exception as e:
+        print("Firecrawl scrape error:", e)
+        return ""
+
+def is_category_page(url):
+    category_indicators = ["/b/", "/c/", "/category/", "/search", "?q=", "/l/", "/sch/", "/tienda/"]
+    for ind in category_indicators:
+        if ind in url:
+            return True
+    return False
 
 
 class SearchRequest(BaseModel):
@@ -125,9 +152,15 @@ def root():
 def sniper(request: SearchRequest):
     queries = get_search_queries(request.query)
     all_listings = []
+
     for q in queries:
         results = firecrawl_search(q, num_results=4)
-        all_listings.extend(results)
+        for item in results:
+            if is_category_page(item["url"]):
+                deeper_content = firecrawl_scrape(item["url"])
+                if deeper_content:
+                    item["content"] = deeper_content
+            all_listings.append(item)
 
     seen_urls = set()
     unique_listings = []
@@ -137,7 +170,7 @@ def sniper(request: SearchRequest):
             unique_listings.append(l)
 
     listings_text = ""
-    for i, l in enumerate(unique_listings[:12]):
+    for i, l in enumerate(unique_listings[:10]):
         listings_text += "\n" + str(i+1) + ". URL: " + l["url"] + "\nTitulo: " + l["title"] + "\nContenido: " + l["content"] + "\n"
 
     if not listings_text.strip():
@@ -147,19 +180,20 @@ def sniper(request: SearchRequest):
         "Eres SNIPER RADAR, experto cazador de oportunidades de inversion y coleccionismo.\n\n"
         "Se han encontrado estos resultados de internet para la categoria: " + request.query + "\n\n"
         + listings_text +
-        "\n\nTu mision: analiza cada resultado y crea entre 3 y 5 oportunidades de inversion. "
-        "Si los listings tienen precios especificos,usalos. "
-        "Si son paginas de categoria general, estima precios tipicos de mercado basandote en tu conocimiento "
-        "y busca la incongruencia o oportunidad que podria existir en esa plataforma para esa categoria. "
-        "Siempre devuelve oportunidades reales y accionables. "
+        "\n\nTu mision: extrae productos individuales especificos con sus URLs exactas y precios concretos. "
+        "Busca dentro del contenido de cada pagina los productos individuales listados con precio. "
+        "Para cada producto individual que encuentres con precio, evalua si esta infravalorado. "
         "Devuelve SOLO este JSON array sin texto antes ni despues:\n"
-        '[{"titulo":"nombre del producto","precio_detectado":1000,"moneda":"EUR","valor_mercado":1500,'
-        '"descuento_pct":33,"score":85,"decision":"COMPRAR","riesgo":"medio","liquidez":"alta",'
-        '"motivo":"razon concreta de por que esta infravalorado o es oportunidad",'
-        '"urgencia":"tiempo disponible o tipo de urgencia",'
-        '"verificacion":"pasos concretos para verificar antes de comprar",'
-        '"url":"URL real del listing encontrado"}]\n\n'
-        "Usa las URLs reales encontradas. Solo el JSON array, nada mas."
+        '[{"titulo":"nombre exacto del producto individual","precio_detectado":1000,"moneda":"EUR",'
+        '"valor_mercado":1500,"descuento_pct":33,"score":85,"decision":"COMPRAR",'
+        '"riesgo":"medio","liquidez":"alta",'
+        '"motivo":"razon concreta de por que esta infravalorado",'
+        '"urgencia":"tiempo disponible o urgencia real",'
+        '"verificacion":"pasos concretos para verificar",'
+        '"url":"URL directa al producto individual, no a la categoria"}]\n\n'
+        "IMPORTANTE: la URL debe ser del producto individual, no de la pagina de categoria. "
+        "Si el contenido tiene links a productos individuales,usalos. "
+        "Incluye 3-5 oportunidades. Solo el JSON array, nada mas."
     )
 
     message = client.messages.create(
