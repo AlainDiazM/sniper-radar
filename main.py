@@ -4,6 +4,7 @@ import json
 import anthropic
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
@@ -28,7 +29,7 @@ SYSTEM_PROMPT = "Eres SNIPER RADAR, experto en detectar oportunidades infravalor
 
 @app.get("/")
 def root():
-    return {"status": "SNIPER RADAR ACTIVO"}
+    return FileResponse("index.html")
 
 @app.post("/sniper")
 def sniper(request: SearchRequest):
