@@ -25,8 +25,6 @@ client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 class SearchRequest(BaseModel):
     query: str
 
-SYSTEM_PROMPT = "Eres SNIPER RADAR, experto en detectar oportunidades infravaloradas. Busca productos reales que se vendan mas del 25% por debajo de su valor de mercado. Devuelve SOLO un JSON array con campos: titulo, precio_detectado, moneda, valor_mercado, descuento_pct, score, decision, riesgo, liquidez, motivo, urgencia, verificacion, url. Sin texto adicional."
-
 @app.get("/")
 def root():
     return FileResponse("index.html")
@@ -34,17 +32,42 @@ def root():
 @app.post("/sniper")
 def sniper(request: SearchRequest):
     message = client.messages.create(
-        model= "claude-sonnet-4-5",
-        max_tokens=2000,
-        system=SYSTEM_PROMPT,
+        model="claude-sonnet-4-5",
+        max_tokens=3000,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": "Busca oportunidades reales infravaloradas en: " + request.query}]
+        messages=[{
+            "role": "user",
+            "content": """Busca en internet oportunidades reales de inversion infravaloradas en: """ + request.query + """
+
+Busca listados reales actuales. Luego responde UNICAMENTE con un JSON array, sin texto antes ni despues, con este formato exacto:
+[
+  {
+    "titulo": "nombre del producto",
+    "precio_detectado": 1000,
+    "moneda": "EUR",
+    "valor_mercado": 1500,
+    "descuento_pct": 33,
+    "score": 85,
+    "decision": "COMPRAR",
+    "riesgo": "bajo",
+    "liquidez": "alta",
+    "motivo": "explicacion de por que es oportunidad",
+    "urgencia": "explicacion de urgencia",
+    "verificacion": "pasos para verificar",
+    "url": "https://url-real.com"
+  }
+]
+
+Incluye 3-5 oportunidades. SOLO el JSON array, nada mas."""
+        }]
     )
+
     full_text = ""
     for block in message.content:
         if hasattr(block, "text"):
             full_text += block.text
-    match = re.search(r'\[[\s\S]*\]', full_text)
-    if match:
-        return {"result": match.group(), "query": request.query}
+
+    m = re.search(r'\[[\s\S]*\]', full_text)
+    if m:
+        return {"result": m.group(), "query": request.query}
     return {"result": full_text, "query": request.query}
