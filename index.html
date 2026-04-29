@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNIPER RADAR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--bg:#080c10;--surface:#0d1117;--surface2:#141b24;--border:#1e2d3d;--accent:#00d4ff;--accent2:#ff6b35;--green:#00ff88;--red:#ff3b5c;--yellow:#ffd700;--text:#e8f4f8;--muted:#4a6080}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+  .container{max-width:900px;margin:0 auto;padding:24px 20px;position:relative;z-index:1}
+  .header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:var(--accent);text-shadow:0 0 20px rgba(0,212,255,0.4);line-height:1}
+  .logo span{color:var(--accent2)}
+  .tagline{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;margin-left:auto}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+  .plabel{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:20px}
+  .cat{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:10px 8px;border-radius:8px;font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;font-family:'DM Sans',sans-serif}
+  .cat:hover,.cat.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05)}
+  .cat .ic{display:block;font-size:18px;margin-bottom:4px}
+  .row{display:flex;gap:10px}
+  .inp{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:8px;font-family:'Space Mono',monospace;font-size:13px;outline:none;transition:border-color 0.2s}
+  .inp:focus{border-color:var(--accent)}
+  .inp::placeholder{color:var(--muted)}
+  .btn{background:var(--accent);color:var(--bg);border:none;padding:12px 24px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+  .btn:hover{background:#33ddff}
+  .btn:disabled{opacity:0.4;cursor:not-allowed}
+  .scan{display:none;align-items:center;gap:12px;padding:16px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:8px;margin-bottom:24px;font-family:'Space Mono',monospace;font-size:12px;color:var(--accent)}
+  .scan.on{display:flex}
+  .bar{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+  .fill{height:100%;background:var(--accent);animation:sc 2s ease-in-out infinite}
+  @keyframes sc{0%{width:0%;margin-left:0}50%{width:60%}100%{width:0%;margin-left:100%}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;animation:fu 0.4s ease both}
+  @keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .card:hover{border-color:rgba(0,212,255,0.3)}
+  .ctop{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px}
+  .sbadge{min-width:64px;height:64px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif}
+  .sbadge .n{font-size:28px;line-height:1}
+  .sbadge .l{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px}
+  .sh{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green)}
+  .sm{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--yellow)}
+  .sl{background:rgba(255,59,92,0.1);border:1px solid rgba(255,59,92,0.3);color:var(--red)}
+  .ci{flex:1}
+  .ct{font-weight:500;font-size:15px;margin-bottom:6px;line-height:1.4}
+  .cm{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-family:'Space Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+  .chip.g{color:var(--green);border-color:rgba(0,255,136,0.3)}
+  .cb{background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.7;color:#a8c4d8}
+  .cb strong{color:var(--text)}
+  .cf{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .dec{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;padding:6px 14px;border-radius:6px}
+  .db{background:rgba(0,255,136,0.15);color:var(--green);border:1px solid rgba(0,255,136,0.4)}
+  .da{background:rgba(255,215,0,0.15);color:var(--yellow);border:1px solid rgba(255,215,0,0.4)}
+  .dd{background:rgba(255,59,92,0.15);color:var(--red);border:1px solid rgba(255,59,92,0.4)}
+  .rl{display:flex;gap:8px;margin-left:auto}
+  .rc{font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+  .lnk{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);text-decoration:none;padding:6px 12px;border:1px solid rgba(0,212,255,0.3);border-radius:6px;transition:all 0.2s}
+  .lnk:hover{background:rgba(0,212,255,0.1)}
+  .err{background:rgba(255,59,92,0.05);border:1px solid rgba(255,59,92,0.2);border-radius:12px;padding:20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--red);margin-bottom:16px}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+  .big{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--border);letter-spacing:4px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="logo">SNIPER <span>RADAR</span></div>
+      <div class="tagline">Detector de oportunidades · Powered by Claude AI</div>
+    </div>
+    <div class="dot"></div>
+  </div>
+  <div class="panel">
+    <div class="plabel">// Selecciona categoría</div>
+    <div class="cats">
+      <button class="cat active" data-cat="diamantes y gemas raras infravaloradas"><span class="ic">💎</span>Diamantes</button>
+      <button class="cat" data-cat="relojes lujo Rolex Patek vintage infravalorados"><span class="ic">⌚</span>Relojes</button>
+      <button class="cat" data-cat="comics primera edicion raros infravalorados"><span class="ic">📚</span>Cómics</button>
+      <button class="cat" data-cat="vinilos raros primera edicion coleccionismo infravalorados"><span class="ic">🎵</span>Vinilos</button>
+      <button class="cat" data-cat="coches clasicos inversion infravalorados"><span class="ic">🚗</span>Coches</button>
+      <button class="cat" data-cat="inmuebles por debajo valor mercado España"><span class="ic">🏠</span>Real Estate</button>
+      <button class="cat" data-cat="joyeria vintage oro platino infravalorada"><span class="ic">💍</span>Joyería</button>
+      <button class="cat" data-cat="arte pintura subasta infravalorado"><span class="ic">🖼️</span>Arte</button>
+    </div>
+    <div class="row">
+      <input class="inp" id="inp" placeholder="O escribe búsqueda personalizada..." />
+      <button class="btn" id="fireBtn" onclick="run()">⚡ DISPARAR</button>
+    </div>
+  </div>
+  <div class="scan" id="scan"><span>ESCANEANDO</span><div class="bar"><div class="fill"></div></div><span id="ss">Iniciando...</span></div>
+  <div id="out"><div class="empty"><div class="big">TARGET</div><p style="font-family:'Space Mono',monospace;font-size:12px;margin-top:8px">Selecciona categoría y dispara</p></div></div>
+</div>
+<script>
+document.querySelectorAll('.cat').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.cat').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('inp').value='';
+}));
+function getQ
